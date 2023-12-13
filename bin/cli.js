@@ -85,7 +85,7 @@ async function build() {
       ejs
         .renderFile(path.join(destUrl, file), {
           name: answer,
-          content: "这个是内容填充测适",
+          content: "这个是内容填充测试",
         })
         .then((data) => {
           // 生成 ejs 处理后的模版文件
