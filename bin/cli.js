@@ -4,10 +4,10 @@ import { input } from "@inquirer/prompts"
 import chalk from "chalk"
 import * as commander from "commander"
 import spawn from "cross-spawn"
+import ejs from "ejs"
 import fs from "fs"
 import ora from "ora"
 import path from "path"
-
 const __dirname = path.resolve()
 const program = new commander.Command()
 // 定义需要按照的依赖
@@ -56,9 +56,11 @@ program.parse()
  */
 async function build() {
   const answer = await input({
+    name: "name",
     message: "请输入项目名称",
     default: "my-node-cli",
   })
+
   // 自定义文本信息
   const message = chalk.rgb(4, 156, 219).underline("正在创建。。。")
   // 初始化
@@ -71,7 +73,8 @@ async function build() {
   const cwdUrl = process.cwd()
   try {
     const files = fs.readdirSync(destUrl)
-    let project = path.join(cwdUrl, answer)
+    console.log(answer, "answer")
+    let project = path.join(cwdUrl, `Text-${answer}`)
     // path：要删除的文件夹路径
     if (fs.existsSync(project)) {
       removeFileDir(project)
@@ -79,9 +82,19 @@ async function build() {
     // 创建文件夹
     fs.mkdirSync(project)
     files.forEach(async (file) => {
-      const data = fs.readFileSync(path.join(destUrl, file))
-      fs.writeFileSync(path.join(project, file), data)
+      ejs
+        .renderFile(path.join(destUrl, file), {
+          name: answer,
+          content: "这个是内容填充测适",
+        })
+        .then((data) => {
+          // 生成 ejs 处理后的模版文件
+          fs.writeFileSync(path.join(project, file), data)
+        })
+      //   const data = fs.readFileSync(path.join(destUrl, file))
+      //   fs.writeFileSync(path.join(project, file), data)
     })
+
     spinner.stop() // 停止
     spinner.succeed(chalk.bgHex("#049CDB").bold("成功 ✔"))
   } catch (error) {
