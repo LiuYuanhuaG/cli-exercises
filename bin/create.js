@@ -11,8 +11,8 @@ import fse from 'fs-extra';
 import ora from 'ora'
 import path from 'path'
 import { installDependencies, removeFileDir } from './utils.js'
-
-
+import {getTemplates} from './http.js'
+import downloadGitRepo  from 'download-git-repo'
 const __dirname = path.resolve()
 // 定义需要按照的依赖
 const dependencies = ['vue', 'vuex', 'vue-router']
@@ -23,6 +23,9 @@ const dependencies = ['vue', 'vuex', 'vue-router']
  *
  */
 async function build(name, option) {
+    downloadGitRepo('https://api.github.com/repos/LiuYuanhuaG/vite-vue3-init')
+    console.log(await getTemplates());
+    return
     const { force } = option
 
     // 自定义文本信息
