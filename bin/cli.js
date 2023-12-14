@@ -2,7 +2,7 @@
 
 import { input } from '@inquirer/prompts'
 import chalk from 'chalk'
-import { spawnSync } from 'child_process'
+// import { spawnSync } from 'child_process'
 import * as commander from 'commander'
 import spawn from 'cross-spawn'
 import ejs from 'ejs'
@@ -78,6 +78,8 @@ async function build(option) {
 	const message = chalk.rgb(4, 156, 219).underline('正在创建。。。')
 	// 初始化
 	const spinner = ora(message)
+	spinner.color = 'red';    
+
 	spinner.start()
 	// 模版文件目录
 	const destUrl = path.join(__dirname, 'templates')
@@ -99,10 +101,13 @@ async function build(option) {
 		// 创建文件夹
 		fs.mkdirSync(project)
 		files.forEach(async (file) => {
+			console.log(file);
+	
 			ejs.renderFile(path.join(destUrl, file), {
 				name: answer,
 				content: '这个是内容填充测试',
 			}).then((data) => {
+				console.log(data);
 				// 生成 ejs 处理后的模版文件
 				fs.writeFileSync(path.join(project, file), data)
 			})
@@ -112,7 +117,7 @@ async function build(option) {
 
 		spinner.stop() // 停止
 		spinner.succeed(chalk.bgHex('#049CDB').bold('成功 ✔'))
-		installDependencies(dependencies,`Text-${answer}`)
+		installDependencies(dependencies,project)
 	} catch (error) {
 		console.error(error)
 		spinner.stop() // 停止
@@ -145,19 +150,21 @@ function removeFileDir(path) {
  */
 function installDependencies(dependencies,path) {
 	const spinner = ora(chalk.bgBlue('正在安装依赖 '))
-	const cmd = spawn('cd',[`${path} ; npm install`])
-	console.log(cmd,'xcxzcxcxz');
+	const cmd = spawn('npm',[`install`].concat(dependencies),{
+		cwd:path // 设置工作路径
+	})
+
 	spinner.start()
 	// 监听执行结果
 	cmd.on('close', function (code) {
 		// 执行失败
 		if (code !== 0) {
 			process.exit(1)
-			spinner.fail(chalk.bgRed(' 安装失败 ✖ '))
+			spinner.fail(chalk.bgRed(' 依赖安装失败 ✖ '))
 		}
 		// 执行成功
 		else {
-			spinner.succeed(chalk.bgRed(' 安装成功'))
+			spinner.succeed(chalk.bgRed(' 依赖安装成功'))
 		}
 		spinner.stop()
 	})
