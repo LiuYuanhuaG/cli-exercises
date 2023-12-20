@@ -5,11 +5,11 @@ import util from 'util'
 import path from 'path'
 import ora from 'ora'
 import chalk from 'chalk';
-import { rawlist } from '@inquirer/prompts'
+import { rawlist, select } from '@inquirer/prompts'
 import { getRepoList, getTagList } from './http.js'
 // const downloadGitRepo = require('download-git-repo') // 不支持 Promise
 import child_process from 'child_process';
-const { spawn } = child_process
+const { spawn, exec } = child_process
 // 添加加载动画
 async function wrapLoading(fn, message, ...args) {
     // 使用 ora 初始化，传入提示信息 message
@@ -18,7 +18,7 @@ async function wrapLoading(fn, message, ...args) {
     spinner.start();
 
     try {
-        console.log(args);
+        // console.log(args);
         // 执行传入方法 fn
         const result = await fn(...args);
 
@@ -37,17 +37,28 @@ export default class Generator {
     constructor(name, targetDir) {
         this.template = [{
             name: 'vite-vue3',
-            value: 'https://github.com/LiuYuanhuaG/vite-vue3-init.git#master'
+            value: 'https://github.com/LiuYuanhuaG/vite-vue3-init.git',
+            description: chalk.blue('github仓库源,vite+v3 的基础模板'),
         }, {
             name: 'vite-react',
-            value: 'https://github.com/LiuYuanhuaG/vite-vue3-init.git#master'
+            value: 'https://github.com/LiuYuanhuaG/vite-vue3-init.git',
+            description: chalk.blue('github仓库源,vite+react 的基础模板'),
         },]
         // 目录名称
         this.name = name;
         // 创建位置
         this.targetDir = targetDir;
         // 对 download-git-repo 进行 promise 化改造
-        this.downloadGitRepo = util.promisify(downloadGitRepo);
+        this.downloadCmd = (requestUrl) => {
+            return new Promise((res, reg) => {
+                exec(requestUrl, {}, function (error, stdout, stderr) {
+                    if (error) {
+                        console.log(chalk.red(error));
+                    }
+                    res(error)
+                })
+            })
+        }
 
     }
 
@@ -55,32 +66,24 @@ export default class Generator {
     // 下载远程模板
     // 1）拼接下载地址
     // 2）调用下载方法
-    async download(repo, tag) {
-
-        // 1）拼接下载地址
-        const requestUrl = `direct: ${repo}`;
+    async download(repo, dir) {
+        const requestUrl = 'git clone ' + repo + ' ' + this.name;
 
         // 2）调用下载方法
         await wrapLoading(
-            this.downloadGitRepo, // 远程下载方法
-            'waiting download template', // 加载提示信息
+            this.downloadCmd, // 远程下载方法
+            '正在下载模板', // 加载提示信息
             requestUrl, // 参数1: 下载地址
-            this.targetDir, { clone: true }) // 参数2: 创建位置
+        ) 
     }
 
     async getRepo() {
         // 1）从远程拉取模板数据
-        // const repoList = await wrapLoading(getRepoList, 'waiting fetch template');
-        // if (!repoList) return;
-        // console.log(repoList,'sdsdsa');
-        // // 过滤我们需要的模板名称
-        // const repos = this.template.map(item => ({name:item.name,value:item.name}));
-
         // 2）用户选择自己新下载的模板名称
-        const repo = await rawlist({
+        const repo = await select({
             name: 'repo',
             choices: this.template,
-            message: '请选择想要下载的模板\t Please choose a template to create project'
+            message: '请选择想要下载的模板\n  Please choose a template to create project  =>>>>> '
         })
 
         // 3）return 用户选择的名称
@@ -120,14 +123,46 @@ export default class Generator {
     // 4）模板使用提示
     async create() {
 
+        const tempSource = await select({
+            name: 'tempSource',
+            choices: [
+                {
+                    name: "自定模板来源",
+                    value: 'custom',
+                    description: chalk.blue('您可以提供所需下载的模板仓库地址以供下载'),
+                },
+                {
+                    name: "内置仓库模板源GitHub",
+                    value: 'gitHub',
+                    description: chalk.blue('脚手架的仓库模板源--GitHub'),
+                },
+                {
+                    name: "内置仓库模板源Gitee",
+                    value: 'gitee',
+                    description: chalk.blue('脚手架的仓库模板源--gitee'),
+                },
+            ],
+            message: '请选择下载模板源\n  Please select the download template source  =>>>>> '
+        })
+        let source = []
+        if (tempSource == 'custom') {
+
+        }
+        if (tempSource == 'gitHub') {
+            const repo = await this.getRepo()
+            await this.download(repo)
+        }
+        if (tempSource == 'gitee') {
+            const repo = await this.getRepo()
+        }
         // 1）获取模板名称
-        const repo = await this.getRepo()
-        console.log(repo, 'repo');
+
+        // console.log(repo, 'repo');
         // 2) 获取 tag 名称
         // const tag = await this.getTag(repo)
 
         // 3）下载模板到模板目录
-        await this.download(repo, 'tag')
+        // await this.download(repo, 'tag')
 
         // 4）模板使用提示
         console.log(`\r\nSuccessfully created project ${chalk.cyan(this.name)}`)
