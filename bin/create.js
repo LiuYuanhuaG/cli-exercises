@@ -11,9 +11,10 @@ import fse from 'fs-extra';
 import ora from 'ora'
 import path from 'path'
 import { installDependencies, removeFileDir } from './utils.js'
-import {getTemplates} from './http.js'
-import downloadGitRepo  from 'download-git-repo'
-import util  from 'util'
+import { getTemplates } from './http.js'
+import downloadGitRepo from 'download-git-repo'
+import util from 'util'
+import Generator from './generator.js'
 const __dirname = path.resolve()
 // 定义需要按照的依赖
 const dependencies = ['vue', 'vuex', 'vue-router']
@@ -24,11 +25,20 @@ const dependencies = ['vue', 'vuex', 'vue-router']
  *
  */
 async function build(name, option) {
-     console.log((await getTemplates()));
-    // downloadGitRepo('LiuYuanhuaG/vite-vue3-init', path.join(process.cwd(), `Text-${name}`),function (err) {
-    //     console.log(err ? 'Error' : 'Success',err)
-    //   })
    
+    // 当前命令行选择的目录
+    const cwd = process.cwd();
+    // 需要创建的目录地址
+    const targetAir = path.join(cwd, name)
+    if (fs.existsSync(targetAir)) {
+        await fse.remove(targetAir)
+        // removeFileDir(project)
+    }
+    // 创建项目
+    const generator = new Generator(name, targetAir);
+
+    // 开始创建项目
+    generator.create()
     return
     const { force } = option
 
@@ -68,8 +78,8 @@ async function build(name, option) {
         spinner.start()
         // 创建文件夹
         fs.mkdirSync(project)
-        await fse.copy(destUrl,project)
-  
+        await fse.copy(destUrl, project)
+
 
         spinner.stop() // 停止
         spinner.succeed(chalk.bgHex('#049CDB').bold('成功 ✔'))
