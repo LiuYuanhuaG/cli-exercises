@@ -5,7 +5,7 @@ import util from 'util'
 import path from 'path'
 import ora from 'ora'
 import chalk from 'chalk';
-import { rawlist, select } from '@inquirer/prompts'
+import { rawlist, select, input } from '@inquirer/prompts'
 import { getRepoList, getTagList } from './http.js'
 // const downloadGitRepo = require('download-git-repo') // 不支持 Promise
 import child_process from 'child_process';
@@ -72,17 +72,17 @@ export default class Generator {
         // 2）调用下载方法
         await wrapLoading(
             this.downloadCmd, // 远程下载方法
-            '正在下载模板', // 加载提示信息
+            '正在下载模板, 请稍后。。。\n', // 加载提示信息
             requestUrl, // 参数1: 下载地址
-        ) 
+        )
     }
 
-    async getRepo() {
+    async getRepo(templateList) {
         // 1）从远程拉取模板数据
         // 2）用户选择自己新下载的模板名称
         const repo = await select({
             name: 'repo',
-            choices: this.template,
+            choices: templateList,
             message: '请选择想要下载的模板\n  Please choose a template to create project  =>>>>> '
         })
 
@@ -122,50 +122,53 @@ export default class Generator {
     // 3）下载模板到模板目录
     // 4）模板使用提示
     async create() {
-
+        // 下载地址
+        let url = ''
+        // 模板列表
+        let templateList = []
         const tempSource = await select({
             name: 'tempSource',
             choices: [
                 {
                     name: "自定模板来源",
                     value: 'custom',
-                    description: chalk.blue('您可以提供所需下载的模板仓库地址以供下载'),
+                    description: chalk.blue('  您可以提供所需下载的模板仓库地址以供下载'),
                 },
                 {
                     name: "内置仓库模板源GitHub",
                     value: 'gitHub',
-                    description: chalk.blue('脚手架的仓库模板源--GitHub'),
+                    description: chalk.blue('  脚手架的仓库模板源--GitHub'),
                 },
                 {
                     name: "内置仓库模板源Gitee",
                     value: 'gitee',
-                    description: chalk.blue('脚手架的仓库模板源--gitee'),
+                    description: chalk.blue('  脚手架的仓库模板源--gitee'),
                 },
             ],
             message: '请选择下载模板源\n  Please select the download template source  =>>>>> '
         })
-        let source = []
         if (tempSource == 'custom') {
-
+            const _source = await input({
+                message: '请输入您想要下载模板地址   =>>>>>',
+            })
+            const branch = await input({
+                message: '请输入您想要下载模板分支  ' + chalk.yellow('默认为当前主分支') + '  =>>>>>',
+            })
+            url = '-b ' + `${branch} ` + _source
         }
+
         if (tempSource == 'gitHub') {
-            const repo = await this.getRepo()
-            await this.download(repo)
+            templateList = this.gitHubTemplate
         }
         if (tempSource == 'gitee') {
-            const repo = await this.getRepo()
+            templateList = this.giteeTemplate
         }
-        // 1）获取模板名称
 
-        // console.log(repo, 'repo');
-        // 2) 获取 tag 名称
-        // const tag = await this.getTag(repo)
-
-        // 3）下载模板到模板目录
-        // await this.download(repo, 'tag')
-
+        const url = await this.getRepo(templateList)
+        await this.download(url)
         // 4）模板使用提示
-        console.log(`\r\nSuccessfully created project ${chalk.cyan(this.name)}`)
+        console.log(`\r\n已成功创建项目(Successfully created project) ${chalk.cyan(this.name)}`)
+        console.log(`可以运行以下命令`)
         console.log(`\r\n  cd ${chalk.cyan(this.name)}`)
         console.log('  npm run dev\r\n')
     }
