@@ -1,13 +1,22 @@
 {
-  "name": "my-vue-test",
-  "version": "1.0.0",
+  "name": "lyh-web-cli",
+  "version": "1.0.1",
   "description": "",
   "license": "ISC",
   "type": "module",
   "exports": "./index.js",
-  "bin": "./bin/cli.js",
+  "bin":{
+    "lyh-web-cli":"./bin/cli.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "lyh-web-cli",
+    "脚手架"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
     "@inquirer/prompts": "^3.3.0",
