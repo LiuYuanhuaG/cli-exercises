@@ -90,30 +90,6 @@ export default class Generator {
         return repo;
     }
 
-    // 获取用户选择的版本
-    // 1）基于 repo 结果，远程拉取对应的 tag 列表
-    // 2）用户选择自己需要下载的 tag
-    // 3）return 用户选择的 tag
-
-    async getTag(repo) {
-        // 1）基于 repo 结果，远程拉取对应的 tag 列表
-        const tags = await wrapLoading(getTagList, 'waiting fetch tag', repo);
-        if (!tags) return;
-
-        // 过滤我们需要的 tag 名称
-        const tagsList = tags.map(item => ({ name: item.name, value: item.name }));
-        console.log(tagsList, tags, 'tagsList');
-        // 2）用户选择自己需要下载的 tag
-        const { tag } = await rawlist({
-            name: 'tag',
-            choices: tagsList,
-            message: 'Place choose a tag to create project'
-        })
-
-        // 3）return 用户选择的 tag
-        return tag
-    }
-
 
 
     // 核心创建逻辑
