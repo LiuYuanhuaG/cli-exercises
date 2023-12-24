@@ -11,7 +11,6 @@ import fse from 'fs-extra';
 import ora from 'ora'
 import path from 'path'
 import { installDependencies, removeFileDir } from './utils.js'
-import { getTemplates } from './http.js'
 import util from 'util'
 import Generator from './generator.js'
 const __dirname = path.resolve()

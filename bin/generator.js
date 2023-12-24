@@ -6,7 +6,7 @@ import path from 'path'
 import ora from 'ora'
 import chalk from 'chalk';
 import { rawlist, select, input } from '@inquirer/prompts'
-import { getRepoList, getTagList } from './http.js'
+import {  getBaseTemp } from './http.js'
 // const downloadGitRepo = require('download-git-repo') // 不支持 Promise
 import child_process from 'child_process';
 const { spawn, exec } = child_process
@@ -35,15 +35,6 @@ async function wrapLoading(fn, message, ...args) {
 
 export default class Generator {
     constructor(name, targetDir) {
-        this.template = [{
-            name: 'vite-vue3',
-            value: 'https://github.com/LiuYuanhuaG/vite-vue3-init.git',
-            description: chalk.blue('github仓库源,vite+v3 的基础模板'),
-        }, {
-            name: 'vite-react',
-            value: 'https://github.com/LiuYuanhuaG/vite-vue3-init.git',
-            description: chalk.blue('github仓库源,vite+react 的基础模板'),
-        },]
         // 目录名称
         this.name = name;
         // 创建位置
@@ -90,8 +81,6 @@ export default class Generator {
         return repo;
     }
 
-
-
     // 核心创建逻辑
     // 1）获取模板名称
     // 2）获取 tag 名称
@@ -133,14 +122,12 @@ export default class Generator {
             url = '-b ' + `${branch} ` + _source
         }
 
-        if (tempSource == 'gitHub') {
-            templateList = this.gitHubTemplate
-        }
-        if (tempSource == 'gitee') {
-            templateList = this.giteeTemplate
+        if (['gitee', 'gitHub'].includes(tempSource)) {
+            templateList = getBaseTemp(tempSource)
+            url = await this.getRepo(templateList)
         }
 
-        const url = await this.getRepo(templateList)
+
         await this.download(url)
         // 4）模板使用提示
         console.log(`\r\n已成功创建项目(Successfully created project) ${chalk.cyan(this.name)}`)
