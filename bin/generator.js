@@ -91,6 +91,7 @@ export default class Generator {
         let url = ''
         // 模板列表
         let templateList = []
+        // 询问模板来源
         const tempSource = await select({
             name: 'tempSource',
             choices: [
@@ -112,6 +113,7 @@ export default class Generator {
             ],
             message: '请选择下载模板源\n  Please select the download template source  =>>>>> '
         })
+        // 自定义源
         if (tempSource == 'custom') {
             const _source = await input({
                 message: '请输入您想要下载模板地址   =>>>>>',
@@ -121,7 +123,7 @@ export default class Generator {
             })
             url = '-b ' + `${branch} ` + _source
         }
-
+        // 内置模板源
         if (['gitee', 'gitHub'].includes(tempSource)) {
             templateList = getBaseTemp(tempSource)
             url = await this.getRepo(templateList)
