@@ -20,5 +20,5 @@ yarn add -g lyh-web-cli
 ## 使用
 
 ```
-lyh-cli create <name>  
+lyh-web-cli create <name>  
 ```
